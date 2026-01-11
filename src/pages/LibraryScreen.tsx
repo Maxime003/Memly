@@ -101,7 +101,18 @@ export default function LibraryScreen() {
             <div>Subjects in state: {subjects.length}</div>
             <div>Subject IDs: {subjects.length > 0 ? subjects.map(s => s.id).join(', ') : 'none'}</div>
             <div>Subject Titles: {subjects.length > 0 ? subjects.map(s => s.title).join(' | ') : 'none'}</div>
+            <div className="mt-2 font-bold text-red-900">
+              ⚠️ Si vous voyez "Introduction à React Hooks" ci-dessus, le state contient les MOCK DATA
+              <br />
+              ⚠️ Si vous voyez "Ocytocine" et "dopamine", le state contient les VRAIES données
+            </div>
           </div>
+          {/* Log du state au moment du render */}
+          {(() => {
+            console.log('[LibraryScreen RENDER] Current subjects state:', subjects)
+            console.log('[LibraryScreen RENDER] Subjects to render:', subjects.map(s => ({ id: s.id, title: s.title })))
+            return null
+          })()}
           {/* #region agent log */}
           {(() => {
             fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:73',message:'Render with subjects',data:{subjectsLength:subjects.length,subjectsIds:subjects.map(s=>s.id),subjectsTitles:subjects.map(s=>s.title),isVercel:window.location.hostname.includes('vercel'),hostname:window.location.hostname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
