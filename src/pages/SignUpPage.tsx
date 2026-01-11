@@ -6,6 +6,7 @@ import AuthLayout from '../components/layout/AuthLayout'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Label from '../components/ui/Label'
+import { useAuth } from '../context/auth-context'
 
 interface SignUpForm {
   email: string
@@ -16,6 +17,7 @@ interface SignUpForm {
 export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const { signUp, signInWithGoogle } = useAuth()
   const {
     register,
     handleSubmit,
@@ -28,15 +30,17 @@ export default function SignUpPage() {
   const onSubmit = async (data: SignUpForm) => {
     setIsLoading(true)
     try {
-      // Simulate API call
-      console.log('Sign up attempt:', data.email)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      toast.success('Inscription réussie')
-      setTimeout(() => {
-        navigate('/app')
-      }, 500)
-    } catch (error) {
-      toast.error('Erreur lors de l\'inscription. Veuillez réessayer.')
+      await signUp(data.email, data.password)
+      toast.success('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.')
+      navigate('/login')
+    } catch (error: any) {
+      const errorMessage =
+        error?.message?.includes('already registered')
+          ? 'Cet email est déjà enregistré'
+          : error?.message?.includes('Password should be at least')
+          ? 'Le mot de passe doit contenir au moins 6 caractères'
+          : 'Erreur lors de l\'inscription. Veuillez réessayer.'
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -143,8 +147,12 @@ export default function SignUpPage() {
           type="button"
           variant="outline"
           className="w-full"
-          onClick={() => {
-            toast.info('Inscription Google à venir')
+          onClick={async () => {
+            try {
+              await signInWithGoogle()
+            } catch (error) {
+              toast.error('Erreur lors de l\'inscription avec Google')
+            }
           }}
         >
           <svg

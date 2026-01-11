@@ -1,20 +1,56 @@
 import { useNavigate } from 'react-router-dom'
-import { useMockData } from '../hooks/useMockData'
+import { useEffect, useState } from 'react'
+import { fetchSubjectsDueForReview } from '../services/subjectService'
+import { useAuth } from '../context/auth-context'
 import { BrainCircuit, Clock, PartyPopper } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale/fr'
+import type { Subject } from '../types'
 import EmptyState from '../components/ui/EmptyState'
 import Card from '../components/ui/Card'
 
 export default function Dashboard() {
-  const { getSubjectsDueForReview, isLoading } = useMockData()
-  const subjectsToReview = getSubjectsDueForReview()
+  const { user } = useAuth()
   const navigate = useNavigate()
+  const [subjectsToReview, setSubjectsToReview] = useState<Subject[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadSubjects = async () => {
+      if (!user?.id) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        setIsLoading(true)
+        setError(null)
+        const subjects = await fetchSubjectsDueForReview(user.id)
+        setSubjectsToReview(subjects)
+      } catch (err) {
+        console.error('Error loading subjects:', err)
+        setError(err instanceof Error ? err.message : 'Une erreur est survenue')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSubjects()
+  }, [user?.id])
 
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-gray-500">Chargement...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-red-500">Erreur: {error}</div>
       </div>
     )
   }

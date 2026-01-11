@@ -8,18 +8,41 @@ import LibraryScreen from './pages/LibraryScreen'
 import CreateSubjectScreen from './pages/CreateSubjectScreen'
 import SubjectView from './pages/SubjectView'
 import SettingsScreen from './pages/SettingsScreen'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { GuestRoute } from './components/GuestRoute'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
+        <Route
+          path="/login"
+          element={
+            <GuestRoute>
+              <LoginPage />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <GuestRoute>
+              <SignUpPage />
+            </GuestRoute>
+          }
+        />
         {/* Redirect /app/login and /app/signup to their respective routes */}
         <Route path="/app/login" element={<Navigate to="/login" replace />} />
         <Route path="/app/signup" element={<Navigate to="/signup" replace />} />
-        <Route path="/app" element={<AppLayout />}>
+        <Route
+          path="/app"
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="library" element={<LibraryScreen />} />
           <Route path="create" element={<CreateSubjectScreen />} />

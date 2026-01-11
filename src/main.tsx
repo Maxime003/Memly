@@ -3,10 +3,13 @@ import { createRoot } from 'react-dom/client'
 import { Toaster } from 'sonner'
 import './index.css'
 import App from './App.tsx'
+import { AuthProvider } from './context/auth-context'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
-    <Toaster position="top-center" />
+    <AuthProvider>
+      <App />
+      <Toaster position="top-center" />
+    </AuthProvider>
   </StrictMode>,
 )

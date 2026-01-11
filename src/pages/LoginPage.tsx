@@ -6,6 +6,7 @@ import AuthLayout from '../components/layout/AuthLayout'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Label from '../components/ui/Label'
+import { useAuth } from '../context/auth-context'
 
 interface LoginForm {
   email: string
@@ -15,6 +16,7 @@ interface LoginForm {
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const { signInWithPassword, signInWithGoogle } = useAuth()
   const {
     register,
     handleSubmit,
@@ -24,15 +26,15 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true)
     try {
-      // Simulate API call
-      console.log('Login attempt:', data.email)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await signInWithPassword(data.email, data.password)
       toast.success('Connexion réussie')
-      setTimeout(() => {
-        navigate('/app')
-      }, 500)
-    } catch (error) {
-      toast.error('Erreur de connexion. Veuillez réessayer.')
+      navigate('/app')
+    } catch (error: any) {
+      const errorMessage =
+        error?.message === 'Invalid login credentials'
+          ? 'Email ou mot de passe incorrect'
+          : 'Erreur de connexion. Veuillez réessayer.'
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -127,8 +129,12 @@ export default function LoginPage() {
           type="button"
           variant="outline"
           className="w-full"
-          onClick={() => {
-            toast.info('Connexion Google à venir')
+          onClick={async () => {
+            try {
+              await signInWithGoogle()
+            } catch (error) {
+              toast.error('Erreur lors de la connexion avec Google')
+            }
           }}
         >
           <svg
