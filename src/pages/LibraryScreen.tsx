@@ -25,7 +25,14 @@ export default function LibraryScreen() {
 
   useEffect(() => {
     const loadSubjects = async () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:28',message:'loadSubjects entry',data:{hasUser:!!user,userId:user?.id,userEmail:user?.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+      
       if (!user?.id) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:30',message:'No user.id branch - early return',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         setIsLoading(false)
         return
       }
@@ -33,10 +40,24 @@ export default function LibraryScreen() {
       try {
         setIsLoading(true)
         setError(null)
+        console.log('[LibraryScreen] Fetching subjects for user:', user.id, 'on', window.location.hostname)
         const loadedSubjects = await fetchSubjects(user.id)
+        
+        console.log('[LibraryScreen] Subjects loaded from Supabase:', loadedSubjects.length, 'subjects')
+        console.log('[LibraryScreen] Subject titles:', loadedSubjects.map(s => s.title))
+        console.log('[LibraryScreen] Subject IDs:', loadedSubjects.map(s => s.id))
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:37',message:'Subjects loaded successfully',data:{subjectsLength:loadedSubjects.length,firstSubjectId:loadedSubjects[0]?.id,firstSubjectTitle:loadedSubjects[0]?.title},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
+        
         setSubjects(loadedSubjects)
+        console.log('[LibraryScreen] State updated with', loadedSubjects.length, 'subjects')
       } catch (err) {
         console.error('Error loading subjects:', err)
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:40',message:'Error caught in loadSubjects',data:{errorMessage:err instanceof Error ? err.message : String(err)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         setError(err instanceof Error ? err.message : 'Une erreur est survenue')
       } finally {
         setIsLoading(false)
@@ -72,6 +93,12 @@ export default function LibraryScreen() {
           <p className="mt-2 text-slate-600">
             {subjects.length} sujet{subjects.length > 1 ? 's' : ''} dans votre bibliothèque
           </p>
+          {/* #region agent log */}
+          {(() => {
+            fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:73',message:'Render with subjects',data:{subjectsLength:subjects.length,subjectsIds:subjects.map(s=>s.id),subjectsTitles:subjects.map(s=>s.title),isVercel:window.location.hostname.includes('vercel'),hostname:window.location.hostname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            return null;
+          })()}
+          {/* #endregion */}
         </div>
 
         {subjects.length === 0 ? (
@@ -86,8 +113,14 @@ export default function LibraryScreen() {
           </Card>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {subjects.map((subject) => {
+            {subjects.map((subject, index) => {
               const isDue = new Date(subject.nextReviewAt) <= new Date()
+              
+              // #region agent log
+              if (index === 0) {
+                fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:113',message:'Rendering subject card',data:{subjectId:subject.id,subjectTitle:subject.title,isVercel:window.location.hostname.includes('vercel'),hostname:window.location.hostname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+              }
+              // #endregion
               
               return (
                 <Card
