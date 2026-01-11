@@ -1,0 +1,144 @@
+`# PROJECT CONTEXT: Mind Drawer (Web Version)
+
+## 1. Project Identity & Goal
+**Name:** Mind Drawer Web
+**Type:** SaaS Education / Productivity Web App
+**Goal:** A learning application combining **Mind Mapping** (for understanding) and **Spaced Repetition** (for retention). Users input raw notes, AI generates a structured Mind Map, and the app schedules reviews based on the SM-2 algorithm.
+
+## 2. Tech Stack (Strict Constraints)
+
+### Frontend
+- **Framework:** React 18+ (Vite)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS (No custom CSS files unless strictly necessary)
+- **Routing:** React Router DOM (v6+)
+- **State Management:** React Context API
+- **Icons:** Lucide React (cleaner than Ionicons for web)
+- **Hosting:** Vercel
+
+### Backend & Data
+- **BaaS:** Supabase
+- **Database:** PostgreSQL
+- **Auth:** Supabase Auth (Email/Password)
+- **API/Serverless:** Supabase Edge Functions (Deno)
+
+### AI & Logic
+- **Model:** Google Gemini 1.5 Flash (via Supabase Edge Functions)
+- **Algorithm:** Custom implementation of SuperMemo-2 (SM-2)
+
+---
+
+## 3. Data Architecture & Schema
+
+### Database Table: `subjects`
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | uuid | Primary Key |
+| `user_id` | uuid | Foreign Key (auth.users) |
+| `title` | text | Subject title |
+| `context` | text | Enum: 'course', 'book', 'article', 'idea' |
+| `raw_notes` | text | Original text input by user |
+| `mind_map` | jsonb | The generated JSON structure (Nodes/Children) |
+| `difficulty_factor`| float | SM-2 Ease Factor (starts at 2.5) |
+| `review_count` | int | Number of repetitions |
+| `last_interval` | int | Days since last review |
+| `next_review_at` | timestamptz| Date of next scheduled review |
+| `created_at` | timestamptz| Creation date |
+
+### Types (TypeScript Interfaces)
+
+```typescript
+// Core structure for the Mind Map
+export interface MindMapNode {
+  id: string;
+  text: string;
+  description?: string;
+  children?: MindMapNode[];
+}
+
+// Subject Object
+export interface Subject {
+  id: string;
+  title: string;
+  context: 'course' | 'book' | 'article' | 'idea';
+  rawNotes: string;
+  mindMap: MindMapNode;
+  difficultyFactor: number;
+  reviewCount: number;
+  lastInterval: number;
+  createdAt: Date;
+  nextReviewAt: Date;
+}`
+
+---
+
+## 4. Key Features & User Flow
+
+### A. Authentication
+
+- Login / Sign Up pages.
+- Protected Routes wrapper (redirect to Login if no session).
+
+### B. Dashboard ("Today")
+
+- Lists subjects due for review (`next_review_at` <= now).
+- Empty state: "Nothing to review, go to Library or Create".
+
+### C. Create Subject (The "Magic" Part)
+
+1. User enters **Title**, selects **Context**, and pastes **Notes**.
+2. **Frontend** calls Supabase Edge Function `generate-mindmap`.
+3. **Edge Function** calls Gemini API securely (API Key is server-side).
+4. **Result:** A generic Mind Map JSON is returned and saved to DB.
+5. User is redirected to the Subject View.
+
+### D. Study Mode (Subject View)
+
+- Displays the interactive Mind Map (Click to expand nodes).
+- **Review Action:** Footer with 3 buttons: "Easy", "Medium", "Hard".
+- **Logic:** Updates `difficulty_factor`, `last_interval`, and `next_review_at` based on SM-2.
+
+### E. Library
+
+- Grid view of all created subjects.
+- Filter/Search functionality.
+
+---
+
+## 5. Coding Rules & Best Practices
+
+### Component Structure
+
+- Use Functional Components with Hooks.
+- **Atomic Design:** `src/components/ui` (buttons, inputs) vs `src/components/domain` (MindMapCanvas).
+- **Styles:** Use Tailwind utility classes directly in JSX. Use `clsx` or `tailwind-merge` for conditional classes.
+
+### Security (CRITICAL)
+
+- **NEVER** expose the Gemini API Key in the frontend code (`.env` or explicitly).
+- All AI generation requests **MUST** go through `supabase.functions.invoke('generate-mindmap')`.
+- Row Level Security (RLS) policies must be enabled on Supabase (Users can only see their own rows).
+
+### Error Handling
+
+- Use `try/catch` in async functions.
+- Display user-friendly Toasts/Alerts on error (e.g., "Failed to generate Mind Map").
+- Implement "Retry" logic for AI generation failures.
+
+---
+
+## 6. Logic to Port (Reference)
+
+The following logic exists in legacy code and should be adapted for the web:
+
+1. **SM-2 Algorithm:** Re-implement the logic found in legacy `src/utils/sm2.ts`:
+    - Inputs: Quality (3/4/5), Interval, Repetitions, EF.
+    - Output: New Interval, New Repetitions, New EF.
+2. AI Prompting:
+    
+    The prompt structure in supabase/functions/generate-mindmap/index.ts is validated and should be preserved to ensure JSON output consistency.
+
+### UI & Responsiveness (STRICT)
+- **Mobile First Approach:** Always write styles for mobile screens first (base classes). Use `md:`, `lg:`, `xl:` breakpoints strictly for larger screen overrides.
+- **App-Like Feel:** Avoid full-page scrolling where possible. Aim for "Screen" layouts (100vh) rather than "Document" layouts.
+- **Touch Targets:** Buttons and inputs must be large enough for touch interaction (min-height 44px).
