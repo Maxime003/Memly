@@ -25,14 +25,7 @@ export default function LibraryScreen() {
 
   useEffect(() => {
     const loadSubjects = async () => {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:28',message:'loadSubjects entry',data:{hasUser:!!user,userId:user?.id,userEmail:user?.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
-      
       if (!user?.id) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:30',message:'No user.id branch - early return',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         setIsLoading(false)
         return
       }
@@ -40,24 +33,10 @@ export default function LibraryScreen() {
       try {
         setIsLoading(true)
         setError(null)
-        console.log('[LibraryScreen] Fetching subjects for user:', user.id, 'on', window.location.hostname)
         const loadedSubjects = await fetchSubjects(user.id)
-        
-        console.log('[LibraryScreen] Subjects loaded from Supabase:', loadedSubjects.length, 'subjects')
-        console.log('[LibraryScreen] Subject titles:', loadedSubjects.map(s => s.title))
-        console.log('[LibraryScreen] Subject IDs:', loadedSubjects.map(s => s.id))
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:37',message:'Subjects loaded successfully',data:{subjectsLength:loadedSubjects.length,firstSubjectId:loadedSubjects[0]?.id,firstSubjectTitle:loadedSubjects[0]?.title},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
         setSubjects(loadedSubjects)
-        console.log('[LibraryScreen] State updated with', loadedSubjects.length, 'subjects')
       } catch (err) {
         console.error('Error loading subjects:', err)
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:40',message:'Error caught in loadSubjects',data:{errorMessage:err instanceof Error ? err.message : String(err)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         setError(err instanceof Error ? err.message : 'Une erreur est survenue')
       } finally {
         setIsLoading(false)
@@ -93,32 +72,6 @@ export default function LibraryScreen() {
           <p className="mt-2 text-slate-600">
             {subjects.length} sujet{subjects.length > 1 ? 's' : ''} dans votre bibliothèque
           </p>
-          {/* DEBUG: Indicateur de version pour vérifier le déploiement */}
-          <div className="mt-4 rounded-lg border-2 border-red-500 bg-red-50 p-3 text-xs font-mono text-red-800">
-            <div className="font-bold">🔴 [DEBUG VERSION CHECK] 🔴</div>
-            <div>Version: 2025-01-15-v2</div>
-            <div>Hostname: {typeof window !== 'undefined' ? window.location.hostname : 'server'}</div>
-            <div>Subjects in state: {subjects.length}</div>
-            <div>Subject IDs: {subjects.length > 0 ? subjects.map(s => s.id).join(', ') : 'none'}</div>
-            <div>Subject Titles: {subjects.length > 0 ? subjects.map(s => s.title).join(' | ') : 'none'}</div>
-            <div className="mt-2 font-bold text-red-900">
-              ⚠️ Si vous voyez "Introduction à React Hooks" ci-dessus, le state contient les MOCK DATA
-              <br />
-              ⚠️ Si vous voyez "Ocytocine" et "dopamine", le state contient les VRAIES données
-            </div>
-          </div>
-          {/* Log du state au moment du render */}
-          {(() => {
-            console.log('[LibraryScreen RENDER] Current subjects state:', subjects)
-            console.log('[LibraryScreen RENDER] Subjects to render:', subjects.map(s => ({ id: s.id, title: s.title })))
-            return null
-          })()}
-          {/* #region agent log */}
-          {(() => {
-            fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:73',message:'Render with subjects',data:{subjectsLength:subjects.length,subjectsIds:subjects.map(s=>s.id),subjectsTitles:subjects.map(s=>s.title),isVercel:window.location.hostname.includes('vercel'),hostname:window.location.hostname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            return null;
-          })()}
-          {/* #endregion */}
         </div>
 
         {subjects.length === 0 ? (
@@ -133,14 +86,8 @@ export default function LibraryScreen() {
           </Card>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {subjects.map((subject, index) => {
+            {subjects.map((subject) => {
               const isDue = new Date(subject.nextReviewAt) <= new Date()
-              
-              // #region agent log
-              if (index === 0) {
-                fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:113',message:'Rendering subject card',data:{subjectId:subject.id,subjectTitle:subject.title,isVercel:window.location.hostname.includes('vercel'),hostname:window.location.hostname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-              }
-              // #endregion
               
               return (
                 <Card

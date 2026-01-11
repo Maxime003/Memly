@@ -51,58 +51,22 @@ export function mapSubjectFromDB(data: SubjectFromDB): Subject {
  * Récupère tous les sujets de l'utilisateur connecté depuis Supabase
  */
 export async function fetchSubjects(userId: string): Promise<Subject[]> {
-  console.log('[fetchSubjects] Called with userId:', userId)
-  console.log('[fetchSubjects] Supabase URL configured:', !!import.meta.env.VITE_SUPABASE_URL)
-  console.log('[fetchSubjects] Supabase Key configured:', !!import.meta.env.VITE_SUPABASE_ANON_KEY)
-  
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'subjectService.ts:53',message:'fetchSubjects entry',data:{userId,userIdLength:userId?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-  // #endregion
-  
   const { data, error } = await supabase
     .from('subjects')
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
-  console.log('[fetchSubjects] Supabase response - Error:', error?.message || 'none', 'Data length:', data?.length || 0)
-  if (data && data.length > 0) {
-    console.log('[fetchSubjects] First subject from DB:', { id: data[0].id, title: data[0].title, user_id: data[0].user_id })
-  }
-
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'subjectService.ts:60',message:'Supabase query result',data:{hasError:!!error,errorCode:error?.code,errorMessage:error?.message,dataLength:data?.length,dataIsNull:data===null,dataIsUndefined:data===undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
-
   if (error) {
-    console.error('[fetchSubjects] Error fetching subjects:', error)
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'subjectService.ts:65',message:'Error branch executed',data:{errorCode:error.code,errorMessage:error.message,errorDetails:error.details},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
+    console.error('Error fetching subjects:', error)
     throw new Error(`Erreur lors de la récupération des sujets: ${error.message}`)
   }
 
   if (!data) {
-    console.log('[fetchSubjects] No data returned, returning empty array')
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'subjectService.ts:72',message:'No data branch - returning empty array',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     return []
   }
 
-  console.log('[fetchSubjects] Mapping', data.length, 'subjects from DB format')
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'subjectService.ts:75',message:'Data found before mapping',data:{dataLength:data.length,firstSubjectId:data[0]?.id,firstSubjectUserId:data[0]?.user_id,firstSubjectTitle:data[0]?.title},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-  // #endregion
-
-  const mapped = data.map(mapSubjectFromDB)
-  console.log('[fetchSubjects] Mapped subjects:', mapped.map(s => ({ id: s.id, title: s.title })))
-  
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'subjectService.ts:78',message:'fetchSubjects exit',data:{mappedLength:mapped.length,firstMappedId:mapped[0]?.id,firstMappedTitle:mapped[0]?.title},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-  // #endregion
-  
-  return mapped
+  return data.map(mapSubjectFromDB)
 }
 
 /**
