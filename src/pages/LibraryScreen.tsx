@@ -94,8 +94,13 @@ export default function LibraryScreen() {
             {subjects.length} sujet{subjects.length > 1 ? 's' : ''} dans votre bibliothèque
           </p>
           {/* DEBUG: Indicateur de version pour vérifier le déploiement */}
-          <div className="mt-2 text-xs text-red-600 font-mono">
-            [DEBUG] Version: 2025-01-15-v2 | Hostname: {typeof window !== 'undefined' ? window.location.hostname : 'server'} | Subjects in state: {subjects.length} | Subject IDs: {subjects.map(s => s.id).join(', ')}
+          <div className="mt-4 rounded-lg border-2 border-red-500 bg-red-50 p-3 text-xs font-mono text-red-800">
+            <div className="font-bold">🔴 [DEBUG VERSION CHECK] 🔴</div>
+            <div>Version: 2025-01-15-v2</div>
+            <div>Hostname: {typeof window !== 'undefined' ? window.location.hostname : 'server'}</div>
+            <div>Subjects in state: {subjects.length}</div>
+            <div>Subject IDs: {subjects.length > 0 ? subjects.map(s => s.id).join(', ') : 'none'}</div>
+            <div>Subject Titles: {subjects.length > 0 ? subjects.map(s => s.title).join(' | ') : 'none'}</div>
           </div>
           {/* #region agent log */}
           {(() => {
