@@ -93,6 +93,10 @@ export default function LibraryScreen() {
           <p className="mt-2 text-slate-600">
             {subjects.length} sujet{subjects.length > 1 ? 's' : ''} dans votre bibliothèque
           </p>
+          {/* DEBUG: Indicateur de version pour vérifier le déploiement */}
+          <div className="mt-2 text-xs text-red-600 font-mono">
+            [DEBUG] Version: 2025-01-15-v2 | Hostname: {typeof window !== 'undefined' ? window.location.hostname : 'server'} | Subjects in state: {subjects.length} | Subject IDs: {subjects.map(s => s.id).join(', ')}
+          </div>
           {/* #region agent log */}
           {(() => {
             fetch('http://127.0.0.1:7242/ingest/464f17b4-208c-4491-89e5-e0758e7f99e2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LibraryScreen.tsx:73',message:'Render with subjects',data:{subjectsLength:subjects.length,subjectsIds:subjects.map(s=>s.id),subjectsTitles:subjects.map(s=>s.title),isVercel:window.location.hostname.includes('vercel'),hostname:window.location.hostname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
