@@ -9,6 +9,7 @@ import Label from '../components/ui/Label'
 import { useAuth } from '../context/auth-context'
 
 interface SignUpForm {
+  fullName: string
   email: string
   password: string
   confirmPassword: string
@@ -30,7 +31,7 @@ export default function SignUpPage() {
   const onSubmit = async (data: SignUpForm) => {
     setIsLoading(true)
     try {
-      await signUp(data.email, data.password)
+      await signUp(data.email, data.password, data.fullName)
       toast.success('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.')
       navigate('/login')
     } catch (error: any) {
@@ -59,6 +60,26 @@ export default function SignUpPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Full Name Field */}
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Nom d'utilisateur</Label>
+            <Input
+              id="fullName"
+              type="text"
+              placeholder="Votre nom complet"
+              {...register('fullName', {
+                required: 'Le nom d\'utilisateur est requis',
+                minLength: {
+                  value: 2,
+                  message: 'Le nom doit contenir au moins 2 caractères',
+                },
+              })}
+            />
+            {errors.fullName && (
+              <p className="text-sm text-red-600">{errors.fullName.message}</p>
+            )}
+          </div>
+
           {/* Email Field */}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>

@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Moon, Info, LogOut, User, Mail, Edit2 } from 'lucide-react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/auth-context'
 import Button from '../components/ui/Button'
 import Switch from '../components/ui/Switch'
 
@@ -16,16 +18,89 @@ const getInitials = (name: string): string => {
 
 export default function SettingsScreen() {
   const navigate = useNavigate()
+  const { user, signOut } = useAuth()
   const [darkMode, setDarkMode] = useState(false)
   const [notifications, setNotifications] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
+  const [userName, setUserName] = useState<string>('')
+  const [userEmail, setUserEmail] = useState<string>('')
+  const [initials, setInitials] = useState<string>('')
 
-  const userName = 'Maxime Durand'
-  const userEmail = 'maxime@minddrawer.app'
-  const initials = getInitials(userName)
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.id) {
+        setIsLoading(false)
+        return
+      }
 
-  const handleLogout = () => {
-    // TODO: Implémenter la déconnexion réelle
-    navigate('/login')
+      try {
+        setIsLoading(true)
+        
+        // Récupérer l'utilisateur pour obtenir l'email
+        const { data: { user: currentUser } } = await supabase.auth.getUser()
+        if (currentUser?.email) {
+          setUserEmail(currentUser.email)
+        }
+
+        // Récupérer le profil depuis la table profiles
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+
+        if (error) {
+          console.error('Error fetching profile:', error)
+          // Si le profil n'existe pas, utiliser l'email comme nom par défaut
+          if (currentUser?.email) {
+            const defaultName = currentUser.email.split('@')[0]
+            setUserName(defaultName)
+            setInitials(getInitials(defaultName))
+          }
+        } else if (profile) {
+          const name = profile.full_name || currentUser?.email?.split('@')[0] || 'Utilisateur'
+          setUserName(name)
+          setInitials(getInitials(name))
+        } else {
+          // Pas de profil trouvé, utiliser l'email
+          if (currentUser?.email) {
+            const defaultName = currentUser.email.split('@')[0]
+            setUserName(defaultName)
+            setInitials(getInitials(defaultName))
+          }
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error)
+        // En cas d'erreur, utiliser l'email comme fallback
+        if (user?.email) {
+          const defaultName = user.email.split('@')[0]
+          setUserName(defaultName)
+          setInitials(getInitials(defaultName))
+          setUserEmail(user.email)
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadProfile()
+  }, [user?.id, user?.email])
+
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      navigate('/login')
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-gray-500">Chargement...</div>
+      </div>
+    )
   }
 
   return (
