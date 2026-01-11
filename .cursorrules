@@ -142,3 +142,17 @@ The following logic exists in legacy code and should be adapted for the web:
 - **Mobile First Approach:** Always write styles for mobile screens first (base classes). Use `md:`, `lg:`, `xl:` breakpoints strictly for larger screen overrides.
 - **App-Like Feel:** Avoid full-page scrolling where possible. Aim for "Screen" layouts (100vh) rather than "Document" layouts.
 - **Touch Targets:** Buttons and inputs must be large enough for touch interaction (min-height 44px).
+
+## Supabase & Database Architecture
+- **Source of Truth**: The database schema uses `snake_case` (e.g., `user_id`, `created_at`, `full_name`, `is_active`).
+- **Frontend Types**: TypeScript interfaces must ALWAYS use `camelCase` (e.g., `userId`, `createdAt`, `fullName`, `isActive`).
+- **Service Layer Pattern**: 
+  - NEVER call `supabase` directly inside React components for data fetching.
+  - ALWAYS create/use a service file (e.g., `src/services/subjectService.ts`).
+  - ALWAYS implement a mapping function to transform DB data (`snake_case`) to Domain types (`camelCase`) immediately after fetching.
+  - Inverse mapping is required when sending data back to Supabase.
+- **Authentication**: 
+  - Assume Row Level Security (RLS) is enabled.
+  - Queries generally don't need manual `.eq('user_id', user.id)` if RLS handles it, BUT you must ensure the session is active.
+  - Use `supabase.auth.getUser()` to check the current user session.
+- **No Mocks**: Unless explicitly asked, always implement real Supabase fetching logic. Remove `useMockData` patterns when replacing with real integration.
