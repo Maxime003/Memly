@@ -1,5 +1,8 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMockData } from '../hooks/useMockData'
+import { useAuth } from '../context/auth-context'
+import { fetchSubjects } from '../services/subjectService'
+import type { Subject } from '../types'
 import { BookOpen, Calendar, TrendingUp } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale/fr'
@@ -14,13 +17,47 @@ const contextLabels: Record<string, string> = {
 }
 
 export default function LibraryScreen() {
-  const { subjects, isLoading } = useMockData()
+  const { user } = useAuth()
   const navigate = useNavigate()
+  const [subjects, setSubjects] = useState<Subject[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadSubjects = async () => {
+      if (!user?.id) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        setIsLoading(true)
+        setError(null)
+        const loadedSubjects = await fetchSubjects(user.id)
+        setSubjects(loadedSubjects)
+      } catch (err) {
+        console.error('Error loading subjects:', err)
+        setError(err instanceof Error ? err.message : 'Une erreur est survenue')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSubjects()
+  }, [user?.id])
 
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-gray-500">Chargement...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-red-500">Erreur: {error}</div>
       </div>
     )
   }

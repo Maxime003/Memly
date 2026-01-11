@@ -1,10 +1,13 @@
-import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { useMockData } from '../hooks/useMockData'
-import { ArrowLeft, ChevronRight, ChevronDown } from 'lucide-react'
-import type { MindMapNode } from '../types'
+import { useState, useEffect } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
+import { useAuth } from '../context/auth-context'
+import { fetchSubjectById, updateSubject } from '../services/subjectService'
+import { calculateNextReview } from '../lib/sm2'
+import type { MindMapNode, Subject } from '../types'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
+import { ArrowLeft, ChevronRight, ChevronDown } from 'lucide-react'
 
 interface MindMapNodeProps {
   node: MindMapNode
@@ -57,8 +60,88 @@ function MindMapNodeComponent({ node, level = 0 }: MindMapNodeProps) {
 
 export default function SubjectView() {
   const { id } = useParams<{ id: string }>()
-  const { getSubjectById, isLoading } = useMockData()
-  const subject = id ? getSubjectById(id) : null
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const [subject, setSubject] = useState<Subject | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isReviewing, setIsReviewing] = useState(false)
+
+  useEffect(() => {
+    const loadSubject = async () => {
+      if (!id || !user?.id) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        setIsLoading(true)
+        setError(null)
+        const loadedSubject = await fetchSubjectById(id, user.id)
+        if (!loadedSubject) {
+          setError('Sujet introuvable')
+        } else {
+          setSubject(loadedSubject)
+        }
+      } catch (err) {
+        console.error('Error loading subject:', err)
+        setError(err instanceof Error ? err.message : 'Une erreur est survenue')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSubject()
+  }, [id, user?.id])
+
+  const handleReview = async (quality: 3 | 4 | 5) => {
+    if (!subject || !user?.id || isReviewing) {
+      return
+    }
+
+    setIsReviewing(true)
+
+    try {
+      // Calculate new SM-2 values
+      const sm2Result = calculateNextReview(
+        quality,
+        subject.lastInterval,
+        subject.reviewCount,
+        subject.difficultyFactor
+      )
+
+      // Update subject in database
+      const updatedSubject = await updateSubject(
+        subject.id,
+        {
+          difficultyFactor: sm2Result.newEaseFactor,
+          reviewCount: sm2Result.newRepetitions,
+          lastInterval: sm2Result.newInterval,
+          nextReviewAt: sm2Result.nextReviewAt,
+        },
+        user.id
+      )
+
+      // Update local state
+      setSubject(updatedSubject)
+
+      // Show success message
+      const qualityLabels = { 3: 'Difficile', 4: 'Moyen', 5: 'Facile' }
+      toast.success(
+        `Révision enregistrée (${qualityLabels[quality]}). Prochaine révision dans ${sm2Result.newInterval} jour${sm2Result.newInterval > 1 ? 's' : ''}.`
+      )
+
+      // Optionally redirect to dashboard after a short delay
+      setTimeout(() => {
+        navigate('/app')
+      }, 1500)
+    } catch (err) {
+      console.error('Error updating review:', err)
+      toast.error('Erreur lors de l\'enregistrement de la révision. Veuillez réessayer.')
+    } finally {
+      setIsReviewing(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -68,11 +151,13 @@ export default function SubjectView() {
     )
   }
 
-  if (!subject) {
+  if (error || !subject) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <h1 className="mb-4 text-2xl font-bold text-slate-900">Sujet introuvable</h1>
+          <h1 className="mb-4 text-2xl font-bold text-slate-900">
+            {error || 'Sujet introuvable'}
+          </h1>
           <Link
             to="/app/library"
             className="text-blue-600 hover:underline"
@@ -133,30 +218,24 @@ export default function SubjectView() {
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => {
-                console.log('Review: Hard', subject.id)
-                // TODO: Implémenter la logique SM-2
-              }}
+              onClick={() => handleReview(3)}
+              disabled={isReviewing}
             >
               Difficile
             </Button>
             <Button
               variant="default"
               className="flex-1"
-              onClick={() => {
-                console.log('Review: Medium', subject.id)
-                // TODO: Implémenter la logique SM-2
-              }}
+              onClick={() => handleReview(4)}
+              disabled={isReviewing}
             >
               Moyen
             </Button>
             <Button
               variant="outline"
               className="flex-1 bg-green-50 text-green-700 hover:bg-green-100"
-              onClick={() => {
-                console.log('Review: Easy', subject.id)
-                // TODO: Implémenter la logique SM-2
-              }}
+              onClick={() => handleReview(5)}
+              disabled={isReviewing}
             >
               Facile
             </Button>
