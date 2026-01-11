@@ -104,7 +104,8 @@ export default function CreateSubjectScreen() {
 
       return mindMap
     } catch (error) {
-      if (retries > 0 && !error?.message?.includes('authentification')) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      if (retries > 0 && !errorMessage.includes('authentification')) {
         console.log(`Retrying mind map generation... (${retries} attempts left)`)
         await new Promise((resolve) => setTimeout(resolve, 1000))
         return generateMindMap(title, context, rawNotes, retries - 1)
