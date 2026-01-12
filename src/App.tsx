@@ -8,6 +8,8 @@ import LibraryScreen from './pages/LibraryScreen'
 import CreateSubjectScreen from './pages/CreateSubjectScreen'
 import SubjectView from './pages/SubjectView'
 import SettingsScreen from './pages/SettingsScreen'
+import TermsOfService from './pages/TermsOfService'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { GuestRoute } from './components/GuestRoute'
 
@@ -32,6 +34,9 @@ function App() {
             </GuestRoute>
           }
         />
+        {/* Legal pages - publicly accessible */}
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         {/* Redirect /app/login and /app/signup to their respective routes */}
         <Route path="/app/login" element={<Navigate to="/login" replace />} />
         <Route path="/app/signup" element={<Navigate to="/signup" replace />} />

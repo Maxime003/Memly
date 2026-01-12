@@ -7,7 +7,7 @@ export interface SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>,
 }
 
 const Switch = forwardRef<HTMLInputElement, SwitchProps>(
-  ({ className, label, checked, ...props }, ref) => {
+  ({ className, label, checked = false, ...props }, ref) => {
     return (
       <label className="flex items-center justify-between cursor-pointer">
         {label && <span className="text-sm font-medium text-slate-700">{label}</span>}

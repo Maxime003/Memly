@@ -19,3 +19,14 @@ export interface Subject {
   createdAt: Date
   nextReviewAt: Date
 }
+
+// Profile Object
+export interface Profile {
+  userId: string
+  fullName: string | null
+  email: string
+  notificationsEnabled: boolean
+  notificationTime: string // Format HH:mm (ex: "09:00")
+  createdAt: Date
+  updatedAt: Date
+}
