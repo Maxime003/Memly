@@ -32,7 +32,7 @@ export default function SettingsScreen() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [notifications, setNotifications] = useState<boolean>(true)
+  const [notifications, setNotifications] = useState<boolean>(false) // Désactivé par défaut
   const [notificationTime, setNotificationTime] = useState<string>('09:00')
   const [notificationError, setNotificationError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -57,7 +57,7 @@ export default function SettingsScreen() {
         const profileData = await fetchProfile(user.id)
         setProfile(profileData)
         setUserEmail(profileData.email)
-        setNotifications(profileData.notificationsEnabled ?? true)
+        setNotifications(profileData.notificationsEnabled ?? false) // Désactivé par défaut
         setNotificationTime(profileData.notificationTime ?? '09:00')
         setNotificationError(null)
         

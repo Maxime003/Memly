@@ -27,7 +27,7 @@ function mapProfileFromDB(data: ProfileFromDB, email: string): Profile {
     userId: data.id, // id est la référence vers auth.users(id)
     fullName: data.full_name,
     email,
-    notificationsEnabled: data.notifications_enabled ?? true, // Valeur par défaut si la colonne n'existe pas
+    notificationsEnabled: data.notifications_enabled ?? false, // Désactivé par défaut si la colonne n'existe pas
     notificationTime: data.notification_time ?? '09:00', // Valeur par défaut si la colonne n'existe pas
     createdAt: new Date(data.created_at),
     updatedAt: new Date(data.updated_at),
@@ -76,7 +76,7 @@ export async function fetchProfile(userId: string): Promise<Profile> {
     if (error.code === 'PGRST116') {
       const newProfile: ProfileToDB = {
         full_name: null,
-        notifications_enabled: true,
+        notifications_enabled: false, // Désactivé par défaut, l'utilisateur doit l'activer manuellement
         notification_time: '09:00',
         updated_at: new Date().toISOString(),
       }
